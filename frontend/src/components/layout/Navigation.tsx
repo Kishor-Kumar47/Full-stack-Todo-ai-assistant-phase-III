@@ -1,13 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { removeAuthToken } from '../../services/auth';
 
 export default function Navigation() {
   const router = useRouter();
 
   const handleLogout = () => {
-    removeAuthToken();
+    // Remove all auth tokens from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('jwt_token');
+      localStorage.removeItem('refresh_token');
+    }
     router.push('/auth/login');
     router.refresh();
   };
