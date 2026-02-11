@@ -1,0 +1,367 @@
+openapi: 3.0.3
+info:
+  title: AI Task Assistant API
+  description: API endpoints for AI-powered task assistance
+  version: 1.0.0
+  contact:
+    name: Phase III Development Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/ai/query:
+    post:
+      summary: Submit a query to the AI assistant
+      description: |
+        Send a natural language question about the user's tasks to the AI assistant.
+        The AI will analyze the user's task data and provide relevant insights.
+      operationId: queryAI
+      tags:
+        - AI Assistant
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Natural language question about tasks
+                  example: "What are my high priority tasks?"
+      responses:
+        '200':
+          description: Successful AI response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIQueryResponse'
+        '400':
+          description: Invalid query (empty, too long, or harmful content)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: AI service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '504':
+          description: AI request timeout (exceeded 30 seconds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/ai/history:
+    get:
+      summary: Retrieve user's AI interaction history
+      description: Get a paginated list of past AI queries and responses
+      operationId: getAIHistory
+      tags:
+        - AI Assistant
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of interactions to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: offset
+          in: query
+          description: Number of interactions to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful retrieval of interaction history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIHistoryResponse'
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/ai/confirm-breakdown:
+    post:
+      summary: Create tasks from AI suggestions
+      description: |
+        After AI suggests a task breakdown, user can confirm and create the suggested tasks.
+        This endpoint requires explicit user confirmation and validates the interaction ID.
+      operationId: confirmTaskBreakdown
+      tags:
+        - AI Assistant
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - interaction_id
+                - tasks
+              properties:
+                interaction_id:
+                  type: string
+                  format: uuid
+                  description: ID of the AI interaction that generated these suggestions
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                tasks:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  description: Tasks to create from AI suggestions
+                  items:
+                    type: object
+                    required:
+                      - title
+                    properties:
+                      title:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                        example: "Research competitors"
+                      description:
+                        type: string
+                        maxLength: 1000
+                        example: "Analyze top 3 competitors in the market"
+                      priority:
+                        type: string
+                        enum: [low, medium, high]
+                        default: medium
+                      due_date:
+                        type: string
+                        format: date-time
+                        nullable: true
+      responses:
+        '201':
+          description: Tasks created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully created 3 tasks"
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid task data or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Interaction not found or doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login or /auth/register
+
+  schemas:
+    AIQueryResponse:
+      type: object
+      required:
+        - interaction_id
+        - query
+        - response
+        - timestamp
+      properties:
+        interaction_id:
+          type: string
+          format: uuid
+          description: Unique identifier for this interaction
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        query:
+          type: string
+          description: The user's original query
+          example: "What are my high priority tasks?"
+        response:
+          type: string
+          description: AI's response text
+          example: "You have 3 high priority tasks: 1) Complete project proposal (due tomorrow), 2) Review code changes, 3) Prepare presentation slides."
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+          example: "2026-02-10T20:30:00Z"
+        suggestions:
+          type: array
+          description: Structured suggestions from AI (e.g., task breakdowns)
+          items:
+            $ref: '#/components/schemas/AISuggestion'
+
+    AISuggestion:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [task_breakdown, priority_recommendation]
+          description: Type of suggestion
+        tasks:
+          type: array
+          description: Suggested tasks (for task_breakdown type)
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                example: "Research market trends"
+              description:
+                type: string
+                example: "Analyze current market trends and competitor strategies"
+              priority:
+                type: string
+                enum: [low, medium, high]
+                example: "medium"
+
+    AIHistoryResponse:
+      type: object
+      required:
+        - interactions
+        - total
+      properties:
+        interactions:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - query
+              - response
+              - timestamp
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: "550e8400-e29b-41d4-a716-446655440000"
+              query:
+                type: string
+                example: "What should I focus on today?"
+              response:
+                type: string
+                example: "Focus on your high priority tasks with approaching deadlines..."
+              timestamp:
+                type: string
+                format: date-time
+                example: "2026-02-10T15:30:00Z"
+              status:
+                type: string
+                enum: [pending, completed, failed, timeout]
+                example: "completed"
+        total:
+          type: integer
+          description: Total number of interactions for this user
+          example: 42
+
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - is_completed
+        - priority
+        - created_at
+      properties:
+        id:
+          type: integer
+          example: 123
+        title:
+          type: string
+          example: "Complete project proposal"
+        description:
+          type: string
+          nullable: true
+          example: "Draft and finalize the Q1 project proposal"
+        is_completed:
+          type: boolean
+          example: false
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: "high"
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-02-15T17:00:00Z"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-02-10T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-02-10T14:30:00Z"
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Error:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+          example: "Rate limit exceeded. Maximum 10 requests per minute."

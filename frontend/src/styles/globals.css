@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 248, 250, 252; /* slate-50 */
+  --background-start-rgb: 15, 23, 42; /* slate-900 */
+  --background-end-rgb: 30, 41, 59; /* slate-800 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 248, 250, 252;
+    --background-start-rgb: 15, 23, 42;
+    --background-end-rgb: 30, 41, 59;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Red theme classes */
+.text-red-primary {
+  color: #ef4444; /* red-500 */
+}
+
+.bg-red-primary {
+  background-color: #ef4444; /* red-500 */
+}
+
+.border-red-primary {
+  border-color: #ef4444; /* red-500 */
+}
+
+.hover\:bg-red-hover:hover {
+  background-color: #dc2626; /* red-600 */
+}
+
+/* Dark theme classes */
+.bg-dark-card {
+  background-color: #1e293b; /* slate-800 */
+}
+
+.text-light {
+  color: #f8fafc; /* slate-50 */
+}
+
+/* Custom scrollbar for dark-themed app */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a; /* slate-900 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569; /* slate-600 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b; /* slate-500 */
+}
