@@ -9,11 +9,10 @@ export interface AIQuery {
 
 export interface AISuggestion {
   type: 'task_breakdown' | 'priority_recommendation';
-  tasks?: Array<{
-    title: string;
-    description?: string;
-    priority?: 'low' | 'medium' | 'high';
-  }>;
+  title?: string;
+  description?: string;
+  rationale?: string;
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface AIResponse {
