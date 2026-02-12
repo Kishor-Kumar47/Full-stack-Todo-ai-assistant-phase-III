@@ -39,24 +39,12 @@ export interface AIHistoryResponse {
 
 export interface ConfirmBreakdownRequest {
   interaction_id: string;
-  tasks: Array<{
-    title: string;
-    description?: string;
-    priority?: 'low' | 'medium' | 'high';
-    due_date?: string;
-  }>;
 }
 
 export interface ConfirmBreakdownResponse {
+  created_tasks: number;
+  task_ids: string[];
   message: string;
-  tasks: Array<{
-    id: number;
-    title: string;
-    description?: string;
-    priority: string;
-    is_completed: boolean;
-    created_at: string;
-  }>;
 }
 
 export interface AIError {
