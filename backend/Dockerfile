@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port
+# Expose port (Hugging Face Spaces uses 7860)
 EXPOSE 7860
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Run database migrations and start the application
+CMD alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 7860

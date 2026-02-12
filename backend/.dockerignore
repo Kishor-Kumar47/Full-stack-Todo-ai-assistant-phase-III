@@ -1,24 +1,43 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 *.so
-*.egg
-*.egg-info
-dist
-build
-.env
-.venv
+.Python
 venv/
-ENV/
 env/
-.git
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.local
+
+# Git
+.git/
 .gitignore
+
+# Documentation
+docs/
+
+# Logs
+*.log
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
+
+# OS
 .DS_Store
-.vscode
-.idea
-*.log
+Thumbs.db
