@@ -34,7 +34,7 @@ export default function TaskBreakdown({ interactionId, suggestions, onTasksCreat
     setSuccess(false);
 
     try {
-      const result = await aiService.confirmBreakdown(interactionId);
+      const result = await aiService.confirmBreakdown({ interaction_id: interactionId });
       setSuccess(true);
       setCreatedCount(result.created_tasks);
 
